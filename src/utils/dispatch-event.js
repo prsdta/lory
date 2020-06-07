@@ -1,4 +1,4 @@
-import CustomEvent from 'custom-event';
+import CustomEvent from "custom-event";
 
 /**
  * dispatch custom events
@@ -7,15 +7,12 @@ import CustomEvent from 'custom-event';
  * @param  {string}  type       custom event name
  * @param  {object}  detail     custom detail information
  */
-export default function dispatchEvent (target, type, detail) {
-    let event = new CustomEvent(
-        type,
-        {
-            bubbles: true,
-            cancelable: true,
-            detail: detail
-        }
-    );
+export default function dispatchEvent(target, type, detail) {
+	let event = new CustomEvent(type, {
+		bubbles: true,
+		cancelable: true,
+		detail: detail,
+	});
 
-    target.dispatchEvent(event);
+	target.dispatchEvent(event);
 }
