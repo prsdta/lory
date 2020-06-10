@@ -1,3 +1,4 @@
+/// @ts-check
 /* globals jQuery */
 
 import detectPrefixes from "./utils/detect-prefixes.js";
@@ -5,43 +6,64 @@ import supportsPassive from "./utils/detect-supportsPassive";
 import dispatchEvent from "./utils/dispatch-event.js";
 import defaults from "./defaults.js";
 
+/** @type {<T>(start?: number, end?: number) => T[]} */
 const slice = Array.prototype.slice;
 
+/**
+ * Init function
+ * @param {HTMLElement} slider
+ * @param {typeof defaults} opts
+ */
 export function lory(slider, opts) {
+	/** @type {{x: number; y: number;}} */
 	let position;
+	/** @type {number} */
 	let slidesWidth;
+	/** @type {number} */
 	let frameWidth;
+	/** @type {HTMLElement[]} */
 	let slides;
 
 	/**
 	 * slider DOM elements
 	 */
+	/** @type {HTMLElement} */
 	let frame;
+	/** @type {HTMLElement} */
 	let slideContainer;
+	/** @type {HTMLElement} */
 	let prevCtrl;
+	/** @type {HTMLElement} */
 	let nextCtrl;
+	/** @type {ReturnType<typeof detectPrefixes>} */
 	let prefixes;
+	/** @type {void | () => void} */
 	let transitionEndCallback;
 
 	let index = 0;
+	/** @type {typeof defaults} */
 	let options = {};
-	let touchEventParams = supportsPassive() ? { passive: true } : false;
+	/** Value for the last addEventListener parameter */
+	let touchEventParams = supportsPassive()
+		? /** @type {EventListenerOptions} */ ({ passive: true })
+		: false;
 
-	/**
-	 * if object is jQuery convert to native DOM element
-	 */
+	// if object is jQuery convert to native DOM element
+	// @ts-ignore
 	if (typeof jQuery !== "undefined" && slider instanceof jQuery) {
 		slider = slider[0];
 	}
 
 	/**
-	 * private
+	 * @private
 	 * set active class to element which is the current slide
+	 * @param {HTMLElement[]} slides
+	 * @param {number} currentIndex
 	 */
 	function setActiveElement(slides, currentIndex) {
 		const { classNameActiveSlide } = options;
 
-		slides.forEach((element, index) => {
+		slides.forEach((element) => {
 			if (element.classList.contains(classNameActiveSlide)) {
 				element.classList.remove(classNameActiveSlide);
 			}
@@ -51,14 +73,14 @@ export function lory(slider, opts) {
 	}
 
 	/**
-	 * private
-	 * setupInfinite: function to setup if infinite is set
+	 * @private
+	 * Function to setup when `infinite` option is set
 	 *
-	 * @param  {array} slideArray
-	 * @return {array} array of updated slideContainer elements
+	 * @param  {HTMLElement[]} slideArray
+	 * @return {HTMLElement[]} array of updated slideContainer elements
 	 */
 	function setupInfinite(slideArray) {
-		const { infinite } = options;
+		const { infinite } = /** @type {{infinite: number}} */ (options);
 
 		const front = slideArray.slice(0, infinite);
 		const back = slideArray.slice(
@@ -84,8 +106,9 @@ export function lory(slider, opts) {
 	}
 
 	/**
-	 * [dispatchSliderEvent description]
-	 * @return {[type]} [description]
+	 * @param {"after" | "before" | "on"} phase
+	 * @param {string} type
+	 * @param {object} [detail]
 	 */
 	function dispatchSliderEvent(phase, type, detail) {
 		dispatchEvent(slider, `${phase}.lory.${type}`, detail);
@@ -94,9 +117,9 @@ export function lory(slider, opts) {
 	/**
 	 * translates to a given position in a given time in milliseconds
 	 *
-	 * @to        {number} number in pixels where to translate to
-	 * @duration  {number} time in milliseconds for the transistion
-	 * @ease      {string} easing css property
+	 * @param {number} to number in pixels where to translate to
+	 * @param {number} duration time in milliseconds for the transistion
+	 * @param {string} [ease] easing css property
 	 */
 	function translate(to, duration, ease) {
 		const style = slideContainer && slideContainer.style;
@@ -110,6 +133,7 @@ export function lory(slider, opts) {
 
 	/**
 	 * returns an element's width
+	 * @param {HTMLElement} element
 	 */
 	function elementWidth(element) {
 		return element.getBoundingClientRect().width || element.offsetWidth;
@@ -121,7 +145,8 @@ export function lory(slider, opts) {
 	 * determine nextIndex and slide to next postion
 	 * under restrictions of the defined options
 	 *
-	 * @direction  {boolean}
+	 * @param {number | boolean} nextIndex
+	 * @param {boolean} [direction]
 	 */
 	function slide(nextIndex, direction) {
 		const {
@@ -278,10 +303,10 @@ export function lory(slider, opts) {
 		} = options;
 
 		index = initialIndex;
-		frame = slider.getElementsByClassName(classNameFrame)[0];
-		slideContainer = frame.getElementsByClassName(classNameSlideContainer)[0];
-		prevCtrl = slider.getElementsByClassName(classNamePrevCtrl)[0];
-		nextCtrl = slider.getElementsByClassName(classNameNextCtrl)[0];
+		frame = slider.querySelector(`.${classNameFrame}`);
+		slideContainer = slider.querySelector(`.${classNameSlideContainer}`);
+		prevCtrl = slider.querySelector(`.${classNamePrevCtrl}`);
+		nextCtrl = slider.querySelector(`.${classNameNextCtrl}`);
 
 		position = {
 			x: slideContainer.offsetLeft,
@@ -371,23 +396,24 @@ export function lory(slider, opts) {
 	}
 
 	/**
-	 * public
+	 * @public
 	 * slideTo: called on clickhandler
+	 * @param {number | boolean} index
 	 */
 	function slideTo(index) {
 		slide(index);
 	}
 
 	/**
-	 * public
+	 * @public
 	 * returnIndex function: called on clickhandler
 	 */
 	function returnIndex() {
-		return index - options.infinite || 0;
+		return options.infinite ? index - options.infinite : 0;
 	}
 
 	/**
-	 * public
+	 * @public
 	 * prev function: called on clickhandler
 	 */
 	function prev() {
@@ -395,7 +421,7 @@ export function lory(slider, opts) {
 	}
 
 	/**
-	 * public
+	 * @public
 	 * next function: called on clickhandler
 	 */
 	function next() {
@@ -443,8 +469,13 @@ export function lory(slider, opts) {
 
 	// event handling
 
+	/** @type {typeof position & {
+	 * time: number;
+	 }} */
 	let touchOffset;
+	/** @type {typeof position} */
 	let delta;
+	/** @type {void | boolean} */
 	let isScrolling;
 
 	function onTransitionEnd() {
@@ -455,9 +486,12 @@ export function lory(slider, opts) {
 		}
 	}
 
+	/**
+	 * @param {TouchEvent | MouseEvent} event
+	 */
 	function onTouchstart(event) {
 		const { enableMouseEvents } = options;
-		const touches = event.touches ? event.touches[0] : event;
+		const touches = "touches" in event ? event.touches[0] : event;
 
 		if (enableMouseEvents) {
 			frame.addEventListener("mousemove", onTouchmove);
@@ -485,8 +519,11 @@ export function lory(slider, opts) {
 		});
 	}
 
+	/**
+	 * @param {TouchEvent | MouseEvent} event
+	 */
 	function onTouchmove(event) {
-		const touches = event.touches ? event.touches[0] : event;
+		const touches = "touches" in event ? event.touches[0] : event;
 		const { pageX, pageY } = touches;
 
 		delta = {
@@ -508,10 +545,10 @@ export function lory(slider, opts) {
 		});
 	}
 
+	/** @type {(event: TouchEvent | MouseEvent) => void} */
 	function onTouchend(event) {
 		/**
 		 * time between touchstart and touchend in milliseconds
-		 * @duration {number}
 		 */
 		const duration = touchOffset ? Date.now() - touchOffset.time : undefined;
 
@@ -523,8 +560,6 @@ export function lory(slider, opts) {
 		 * -> swipe distance is greater than 25px
 		 * or
 		 * -> swipe distance is more then a third of the swipe area
-		 *
-		 * @isValidSlide {Boolean}
 		 */
 		const isValid =
 			(Number(duration) < 300 && Math.abs(delta.x) > 25) ||
@@ -536,8 +571,6 @@ export function lory(slider, opts) {
 		 * -> index is 0 and delta x is greater than 0
 		 * or
 		 * -> index is the last slide and delta is smaller than 0
-		 *
-		 * @isOutOfBounds {Boolean}
 		 */
 		const isOutOfBounds =
 			(!index && delta.x > 0) || (index === slides.length - 1 && delta.x < 0);
@@ -568,12 +601,14 @@ export function lory(slider, opts) {
 		});
 	}
 
+	/** @type {(event: MouseEvent) => void} */
 	function onClick(event) {
 		if (delta.x) {
 			event.preventDefault();
 		}
 	}
 
+	/** @type {(event: UIEvent) => void} */
 	function onResize(event) {
 		if (frameWidth !== elementWidth(frame)) {
 			reset();
