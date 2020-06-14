@@ -1,0 +1,197 @@
+#+TITLE: Developement notes and reflections
+
+Principal goal of this fork is to make the carousel more accessible.
+
+* Implement the WAI-ARIA carousel pattern
+To avoid implementing faulty behavior, I'll be trying to meet the requirements
+of the carousel pattern as described in the WAI-ARIA authoring practices
+document: https://www.w3.org/TR/wai-aria-practices/#carousel
+
+The most adequate for my use-case would probably be the *tabbed* style of
+carousel ([[https://www.w3.org/TR/wai-aria-practices/#wai-aria-roles-states-and-properties-4][ref]]).
+
+** List of tasks [0%]
+*** TODO Role
+#+BEGIN_QUOTE
+A carousel container element that encompasses all components of the carousel,
+including both carousel controls and slides, has either role ~region~ or role
+~group~. The most appropriate role for the carousel container depends on the
+information architecture of the page. See the landmark regions guidance to
+determine whether the carousel warrants being designated as a landmark region.
+#+END_QUOTE
+
+This should refer most likely to the =.slider= element? Not sure if that is
+something that should be handled by the library, more likely better to let the
+user decide when writing the base markup.
+
+*** TODO Inner role
+#+BEGIN_QUOTE
+The carousel container has the =aria-roledescription= property set to
+~carousel~.
+#+END_QUOTE
+This would be the role for the =.frame= element?
+
+*** TODO Label
+#+BEGIN_QUOTE
+If the carousel has a visible label, its accessible label is provided by the
+property =aria-labelledby= on the carousel container set to the ID of the
+element containing the visible label. Otherwise, an accessible label is provided
+by the property =aria-label= set on the carousel container. Note that since the
+=aria-roledescription= is set to ~carousel~, the label does not contain the word
+"carousel".
+#+END_QUOTE
+This also seems to be something outside the scope of the library.
+
+*** TODO Control buttons
+#+BEGIN_QUOTE
+The rotation control, next slide control, and previous slide control are either
+native button elements (recommended) or implement the button pattern.
+#+END_QUOTE
+Docs and examples *must* be updated for this.
+
+*** TODO Rotation control
+#+BEGIN_QUOTE
+The rotation control has an accessible label provided by either its inner text
+or =aria-label=. The label changes to match the action the button will perform,
+e.g., "Stop slide rotation" or "Start slide rotation". A label that changes when
+the button is activated clearly communicates both that slide content can change
+automatically and when it is doing so. Note that since the label changes, the
+rotation control does not have any states, e.g., =aria-pressed=, specified.
+#+END_QUOTE
+Currently there is no rotation control so it must be added.
+
+**** Keyboard interaction
+#+BEGIN_QUOTE
+If the carousel has an auto-rotate feature, automatic slide rotation stops when
+any element in the carousel receives keyboard focus. It does not resume unless
+the user activates the rotation control.
+#+END_QUOTE
+
+Remember that:
+#+BEGIN_QUOTE
+If present, the rotation control is the first element in the Tab sequence inside
+the carousel. It is essential that it precede the rotating content so it can be
+easily located.
+#+END_QUOTE
+
+*** TODO Slide role
+#+BEGIN_QUOTE
+Each slide container has role ~group~ with the property =aria-roledescription=
+set to ~slide~.
+#+END_QUOTE
+This should be easy to set to =.js-slide= elements.
+
+⚠ For the *tabbed* pattern:
+#+BEGIN_QUOTE
+Each slide container has role ~tabpanel~ in lieu of ~group~, and it does not
+have the aria-roledescription= property.
+#+END_QUOTE
+
+*** TODO Slides inner label
+:PROPERTIES:
+:ID:       9f18209a-f9e7-41f7-bf49-0c9143573c30
+:END:
+#+BEGIN_QUOTE
+Each slide has an accessible name:
+- *If a slide has a visible label*, its accessible label is provided by the
+  property =aria-labelledby= on the slide container set to the ID of the element
+  containing the visible label.
+
+- *Otherwise*, an accessible label is provided by the property =aria-label= set
+  on the slide container.
+
+- *If unique names* that identify the slide content *are not available*, a
+  number and set size can serve as a meaningful alternative, e.g., "3 of 10".
+
+  *Note*: Normally, including set position and size information in an accessible
+  name is not appropriate. An exception is helpful in this implementation
+  because group elements do not support =aria-setsize= or =aria-posinset=. The
+  *tabbed carousel* implementation pattern does not have this limitation.
+
+- Note that since the =aria-roledescription= is set to ~slide~, the label does
+  not contain the Word "slide."
+#+END_QUOTE
+
+The labels certainly cannot be provided on a library level, but we could offer
+the numbering fallback if no aria labelling property is found?
+
+Docs and examples *must* be updated for this.
+
+*** TODO Live region
+#+BEGIN_QUOTE
+Optionally, an element wrapping the set of slide elements has =aria-atomic= set
+to ~false~ and =aria-live= set to:
+- ~off~: if the carousel is automatically rotating.
+- ~polite~: if the carousel is NOT automatically rotating.
+#+END_QUOTE
+This should be easy to do depending on the =infinite= option's value.
+
+*** TODO Slide picker controls
+Controls are currently not provided by the library, they would need to be
+implemented. The accessible name issue is the most unsure: if they are present,
+it would reuse the [[id:9f18209a-f9e7-41f7-bf49-0c9143573c30][slide inner label]]?
+
+#+BEGIN_QUOTE
+It has slide picker controls implemented using the tabs pattern where:
+#+END_QUOTE
+
+#+BEGIN_QUOTE
+- The accessible name of each ~tab~ indicates which slide it will display by
+  including the name or number of the slide, e.g., "Slide 3". Slide names are
+  preferable if each slide has a unique name.
+#+END_QUOTE
+#+BEGIN_QUOTE
+- The set of controls is grouped in a ~tablist~ element with an accessible name
+  provided by the value of =aria-label= that identifies the purpose of the tabs,
+  e.g., "Choose slide to display."
+#+END_QUOTE
+#+BEGIN_QUOTE
+- The ~tab~, ~tablist~, and ~tabpanel~ implement the properties specified in the
+  [[https://www.w3.org/TR/wai-aria-practices/#tabpanel][tabs pattern]].
+#+END_QUOTE
+
+**** TODO Tab pattern
+#+BEGIN_QUOTE
+- Each control is a ~tab~ element, so activating a tab displays the slide
+  associated with that tab.
+#+END_QUOTE
+***** TODO Keyboard control [0/3]
+From the tabs pattern
+
+****** TODO Tabbing
+#+BEGIN_QUOTE
+- Tab: When focus moves into the tab list, places focus on the *active* ~tab~
+  element. When the tab list contains the focus, moves focus to the next element
+  in the page tab sequence outside the ~tablist~, which is typically either the
+  first focusable element inside the tab panel or the tab panel itself.
+#+END_QUOTE
+This is a [[https://www.w3.org/TR/wai-aria-practices/#kbd_roving_tabindex][roving tabindex pattern]]. Basically, the active element has a =tabindex=
+of ~0~, the other elements are at ~-1~.
+
+****** TODO [#B] Arrows
+#+BEGIN_QUOTE
+- When focus is on a tab element in a horizontal tab list:
+  - *Left Arrow*: moves focus to the previous tab. If focus is on the first tab,
+    moves focus to the last tab. Optionally, activates the newly focused tab
+    (See note below).
+  - *Right Arrow*: Moves focus to the next tab. If focus is on the last tab
+    element, moves focus to the first tab. Optionally, activates the newly
+    focused tab (See note below).
+#+END_QUOTE
+
+Having the tab automatically activate seems to be simpler to use and to
+implement.
+
+****** TODO [#C] Other navigation
+#+BEGIN_QUOTE
+- When focus is on a ~tab~ in a ~tablist~ with either horizontal or vertical
+orientation:
+  - *Space* or *Enter*: Activates the tab if it was not activated automatically
+    on ~focus~. (*Not needed as decided above*)
+   
+  - [ ] *Home* (Optional): Moves focus to the first tab. Optionally, activates the
+    newly focused tab (See note below).
+  - [ ] *End* (Optional): Moves focus to the last tab. Optionally, activates the
+    newly focused tab (See note below).
+  - *Shift + F10*: If the tab has an associated pop-up menu, opens the menu.
+#+END_QUOTE
