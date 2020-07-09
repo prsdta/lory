@@ -195,3 +195,16 @@ orientation:
     newly focused tab (See note below).
   - *Shift + F10*: If the tab has an associated pop-up menu, opens the menu.
 #+END_QUOTE
+* Simpler approach
+https://inclusive-components.design/a-content-slider/
+
+In this post, Heydon creates a slider that is much simpler, using just a group,
+a list, leverages ~IntersectionObserver~ for lazy-loading, and importantly,
+creates *more affordance* with instructions showing up on hover or focus.
+
+** Differences with my goals
+- Heydon's approach being a simple scrolling list, it does not cover *infinite
+  scrolling*.
+- Does not cover auto-rotation. While a choice of the author to make a lean
+  implementation, it is necessary for my use case, thus the library must prepare
+  for this feature (=aria-live= and so on)
