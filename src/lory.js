@@ -7,10 +7,12 @@ import defaults from "./defaults.js";
 
 const slice = Array.prototype.slice;
 
+/** @type {(slider: HTMLElement, opts: object) => object* } */
 export function lory(slider, opts) {
 	let position;
 	let slidesWidth;
 	let frameWidth;
+	/** @type {HTMLElement[]} */
 	let slides;
 
 	/**
@@ -35,19 +37,26 @@ export function lory(slider, opts) {
 	}
 
 	/**
-	 * private
-	 * set active class to element which is the current slide
+	 * @private
+	 *
+	 * set active class to element(s) currently visible and add/remove
+	 * their children from the tab order if needed
+	 * @param {HTMLElement[]} slides
+	 * @param {number} currentIndex
 	 */
 	function setActiveElement(slides, currentIndex) {
-		const { classNameActiveSlide } = options;
+		const { classNameActiveSlide, slidesToScroll } = options;
+		const endIndex = currentIndex + slidesToScroll;
 
 		slides.forEach((element, index) => {
-			if (element.classList.contains(classNameActiveSlide)) {
-				element.classList.remove(classNameActiveSlide);
-			}
+			let isActive = index >= currentIndex && index < endIndex;
+			toggleStatus(element, isActive);
 		});
 
-		slides[currentIndex].classList.add(classNameActiveSlide);
+		/** @type {(el: HTMLElement, isActive: boolean) => void} */
+		function toggleStatus(el, isActive) {
+			el.classList[isActive ? "add" : "remove"](classNameActiveSlide);
+		}
 	}
 
 	/**
