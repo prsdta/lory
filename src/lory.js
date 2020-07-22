@@ -36,6 +36,9 @@ export function lory(slider, opts) {
 		slider = slider[0];
 	}
 
+	/** Selector for elements that are focusable with the keyboard */
+	const FOCUSABLES = 'a[href], button, [tabindex="0"]';
+
 	/**
 	 * @private
 	 *
@@ -56,6 +59,9 @@ export function lory(slider, opts) {
 		/** @type {(el: HTMLElement, isActive: boolean) => void} */
 		function toggleStatus(el, isActive) {
 			el.classList[isActive ? "add" : "remove"](classNameActiveSlide);
+			el.querySelectorAll(FOCUSABLES).forEach(
+				(focusable) => (focusable.tabIndex = isActive ? 0 : -1)
+			);
 		}
 	}
 
